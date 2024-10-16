@@ -17,21 +17,6 @@ const io = new Server(server, {
 
 let connectedUsers = [];
 
-const {
-  supabase,
-  getData,
-  insertGame,
-  getGame,
-  deleteGame,
-  deleteAllGames,
-} = require('./supabase.js')
-
-
-getGame('1')
-  .then((data) => console.log(data))
-  .catch((err) => console.error(err));
-
-
 io.on('connection', (socket) => {
   console.log('A user connected:', socket.id);
 

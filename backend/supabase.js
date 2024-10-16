@@ -3,7 +3,6 @@ const { createClient } = require('@supabase/supabase-js');
 const supabaseUrl = 'https://vcvchhndvjdeqcxeoigs.supabase.co';
 const supabaseKey =
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZjdmNoaG5kdmpkZXFjeGVvaWdzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjkwMjQwMzMsImV4cCI6MjA0NDYwMDAzM30.8vME5o51UU787WxL94dO3UxeosKnUKdB8OJEX_6GktE';
-
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 
@@ -33,18 +32,18 @@ let insertGame = async function (gameData) {
   }
 };
 
-let getGame = async function (gameId) {
+let getGame = async function (code) {
   try {
     let { data: games, error } = await supabase
       .from('games')
       .select('*')
-      .eq('gameId', gameId);
+      .eq('code', code);
 
     if (error) {
       console.error('Error fetching data:', error);
       return null;
     } else if (games.length === 0) {
-      console.log('No game found with the given gameId');
+      console.log('No game found with the given code');
       return null;
     } else {
       return games[0]; 
@@ -54,12 +53,12 @@ let getGame = async function (gameId) {
   }
 };
 
-let deleteGame = async function (gameId) {
+let deleteGame = async function (code) {
   try {
     const { data, error } = await supabase
       .from('games')
       .delete()
-      .eq('gameId', gameId);
+      .eq('code', code);
     if (error) {
       console.error('Error deleting game:', error);
     } else {
@@ -82,8 +81,9 @@ let deleteAllGames = async function () {
     console.error('Error:', err);
   }
 };
+
+
 module.exports = {
-  supabase,
   getData,
   insertGame,
   getGame,
