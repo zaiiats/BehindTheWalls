@@ -1,10 +1,10 @@
 const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
-const { v4: uuidv4 } = require('uuid');
 const { handleCreateGame } = require('./socketHandlers/createGameHandler.js');
 const { handleJoinGame } = require('./socketHandlers/joinGameHandler.js');
 const { handleReconnectUser } = require('./socketHandlers/reconnectUserHandler.js');
+
 
 const app = express();
 const server = http.createServer(app);
@@ -16,6 +16,21 @@ const io = new Server(server, {
 });
 
 let connectedUsers = [];
+
+const {
+  supabase,
+  getData,
+  insertGame,
+  getGame,
+  deleteGame,
+  deleteAllGames,
+} = require('./supabase.js')
+
+
+getGame('1')
+  .then((data) => console.log(data))
+  .catch((err) => console.error(err));
+
 
 io.on('connection', (socket) => {
   console.log('A user connected:', socket.id);

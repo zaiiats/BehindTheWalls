@@ -27,6 +27,7 @@ const HostModal: React.FC<HostModalProps> = ({ setIsVisible }) => {
   const navigation = useNavigation<HostModalNavigationProp>();
 
   const dispatch = useDispatch();
+  
   const [isConnected, setIsConnected] = useState(false);
   const username = useSelector((state: any) => state.player.name);
   const soundVolume = useSelector((state: any) => state.player.soundVolume);
