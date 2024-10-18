@@ -14,8 +14,8 @@ function index() {
      });
 
      return () => {
-       socket.off('updateUsers'); // Remove the listener
-       socket.disconnect(); // Disconnect the socket
+       socket.off('updateUsers'); 
+       socket.disconnect(); 
      };
    }, []);
 
@@ -23,11 +23,13 @@ function index() {
     <View style={style.screen}>
       <Text>
         Lobby
+      </Text>
+      <Text>
         <FlatList
           data={connectedUsers}
           keyExtractor={(item:any) => item.userId}
           renderItem={({ item }) => (
-            <Text>{item.userData.username}</Text> // Display usernames
+            <Text>{item.userData.username}</Text> 
           )}
         />
       </Text>

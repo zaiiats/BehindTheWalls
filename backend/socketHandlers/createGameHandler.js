@@ -2,15 +2,12 @@ const { v4: uuidv4 } = require('uuid');
 const { generateGameCode } = require('../utils/utils.js');
 
 const {
-  getData,
   insertGame,
   getGame,
-  deleteGame,
-  deleteAllGames,
 } = require('../supabase.js');
 
-const handleCreateGame = (io, socket, connectedUsers) => {
-  socket.on('createGame', async (data, callback) => {
+const handleCreateGame = (io, socket) => {
+  socket.on('createGame', async (data) => {
     let gameCode = generateGameCode(); 
     const { userData } = data;
     const userId = uuidv4();
@@ -31,15 +28,20 @@ const handleCreateGame = (io, socket, connectedUsers) => {
       hostName: userData.username,
     };
 
-    insertGame(game);
-    connectedUsers.push(user);
-    io.emit('updateUsers', connectedUsers);
+
+    await insertGame(game);
+
+    socket.emit('joinSuccess', {
+      message: 'You successfully joined the game!',
+      gameData,
+    });
 
     console.log(
       `Game created with code: ${game.code} and host: ${game.hostName}`
     );
 
-    callback({ success: true, userId });
+    //connectedUsers.push(user);
+    //io.emit('updateUsers', connectedUsers);
   });
 };
 

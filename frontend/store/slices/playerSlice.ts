@@ -1,8 +1,8 @@
 import { createSlice } from '@reduxjs/toolkit';
 
 const initialPlayerState = {
-  name: 'asdfasdf',
-  code:'asdfdf',
+  name: '',
+  code:'',
   gameType: '',
   soundVolume: 0.5,
   musicVolume: 0.5,

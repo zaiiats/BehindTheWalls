@@ -43,7 +43,7 @@ let getGame = async function (code) {
       console.error('Error fetching data:', error);
       return null;
     } else if (games.length === 0) {
-      console.log('No game found with the given code');
+      console.log('No game found with the given code', code);
       return null;
     } else {
       return games[0]; 
@@ -69,24 +69,10 @@ let deleteGame = async function (code) {
   }
 };
 
-let deleteAllGames = async function () {
-  try {
-    const { data, error } = await supabase.from('games').delete();
-    if (error) {
-      console.error('Error deleting all games:', error);
-    } else {
-      return data; 
-    }
-  } catch (err) {
-    console.error('Error:', err);
-  }
-};
-
 
 module.exports = {
   getData,
   insertGame,
   getGame,
   deleteGame,
-  deleteAllGames,
 };

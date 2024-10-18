@@ -1,34 +1,34 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { View, TextInput, Text } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { useForm, Controller } from 'react-hook-form';
-import CustomButton from './CustomButton';
 import { gameTypeSet, nameSet } from '../store/slices/playerSlice';
-import { MAX_NAME_LENGTH, MIN_NAME_LENGTH } from '../constants/constants';
-import { io } from 'socket.io-client';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useNavigation } from '@react-navigation/native'
-import { RootStackParamList } from '../app/_layout';
+import CustomButton from './CustomButton';
+import { 
+  MAX_NAME_LENGTH, 
+  MIN_NAME_LENGTH
+} from '../constants/constants';
+import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
-
-type HostModalNavigationProp = StackNavigationProp<RootStackParamList, 'lobby/index'>;
+import { RootStackParamList } from '../app/_layout';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 interface HostModalProps {
   setIsVisible: React.Dispatch<React.SetStateAction<boolean>>;
+  socket: any;
 }
 
-interface HostModalFormValues {
-  username: string;
-}
+type HostModalNavigationProp = StackNavigationProp<
+  RootStackParamList,
+  'lobby/index'
+>;
 
-let socket = io('http://localhost:4000');
-
-const HostModal: React.FC<HostModalProps> = ({ setIsVisible }) => {
-  const navigation = useNavigation<HostModalNavigationProp>();
-
+const HostModal: React.FC<HostModalProps> = ({
+  setIsVisible,
+  socket
+}) => {
   const dispatch = useDispatch();
-  
-  const [isConnected, setIsConnected] = useState(false);
+  const navigation = useNavigation<HostModalNavigationProp>();
   const username = useSelector((state: any) => state.player.name);
   const soundVolume = useSelector((state: any) => state.player.soundVolume);
   const musicVolume = useSelector((state: any) => state.player.musicVolume);
@@ -37,38 +37,13 @@ const HostModal: React.FC<HostModalProps> = ({ setIsVisible }) => {
     control,
     handleSubmit,
     formState: { errors },
-  } = useForm<HostModalFormValues>();
+  } = useForm();
 
-  useEffect(() => {
-    const checkForReconnection = async () => {
-      const savedUserId = await AsyncStorage.getItem('userId');
-      if (savedUserId) {
-        socket.emit(
-          'reconnectUser',
-          { userId: savedUserId },
-          (response: any) => {
-            if (response.success) {
-              console.log('Reconnected with previous session');
-              setIsConnected(true);
-            } else {
-              console.log('Failed to reconnect, starting new session');
-            }
-          }
-        );
-      }
-    };
-
-    socket.on('connect', () => {
-      console.log('Connected to the server:', socket.id);
-      checkForReconnection();
-    });
-  }, []);
-
-  const onSubmit = (data: HostModalFormValues) => {
-    if (!isConnected) {
+  const onSubmit = (data: any) => {
+    if (socket) {
       dispatch(nameSet(data.username));
       dispatch(gameTypeSet('host'));
-
+  
       socket.emit(
         'createGame',
         {
@@ -76,22 +51,13 @@ const HostModal: React.FC<HostModalProps> = ({ setIsVisible }) => {
             username: data.username,
             soundVolume,
             musicVolume,
-          },
-        },
-        async (response: any) => {
-          if (response.success) {
-            console.log('Connected to the game!');
-            setIsConnected(true);
-            await AsyncStorage.setItem('userId', response.userId);
-          } else {
-            console.log('Error or already in the game');
           }
         }
-      );
-      navigation.navigate('lobby/index');
+      )
+      navigation.push('lobby/index');
       setIsVisible(false);
     } else {
-      console.log('You are already connected to the game.');
+      console.error('Socket not initialized');
     }
   };
 
@@ -126,10 +92,14 @@ const HostModal: React.FC<HostModalProps> = ({ setIsVisible }) => {
         )}
       />
       {errors.username && (
-        <Text style={{ color: 'red' }}>{errors.username.message}</Text>
+        <Text style={{ color: 'red' }}>
+          {typeof errors.username.message === 'string'
+            ? errors.username.message
+            : 'Invalid input'}
+        </Text>
       )}
 
-      <CustomButton callback={handleSubmit(onSubmit)}>Start Game</CustomButton>
+      <CustomButton callback={handleSubmit(onSubmit)}>Create Game</CustomButton>
     </View>
   );
 };

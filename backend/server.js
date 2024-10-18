@@ -5,7 +5,6 @@ const { handleCreateGame } = require('./socketHandlers/createGameHandler.js');
 const { handleJoinGame } = require('./socketHandlers/joinGameHandler.js');
 const { handleReconnectUser } = require('./socketHandlers/reconnectUserHandler.js');
 
-
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
@@ -20,17 +19,15 @@ let connectedUsers = [];
 io.on('connection', (socket) => {
   console.log('A user connected:', socket.id);
 
-  handleCreateGame(io, socket, connectedUsers);
-  handleJoinGame(io, socket, connectedUsers)
-  handleReconnectUser(io, socket, connectedUsers);
-
-  socket.on('disconnect', () => {
-    console.log('A user disconnected:', socket.id);
-    connectedUsers = connectedUsers.filter((u) => u.userSocketId !== socket.id);
-    console.log('Remaining users:', connectedUsers);
-
-    io.emit('updateUsers', connectedUsers);
-  });
+  handleCreateGame(io, socket);
+  handleJoinGame(io, socket)
+  
+  //handleReconnectUser(io, socket, connectedUsers);
+  // socket.on('disconnect', () => {
+  //   console.log('A user disconnected:', socket.id);
+  //   connectedUsers = connectedUsers.filter((u) => u.userSocketId !== socket.id);
+  //   io.emit('updateUsers', connectedUsers);
+  // });
 });
 
 const port = 4000;

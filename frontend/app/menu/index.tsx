@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -7,39 +7,60 @@ import {
   SafeAreaView,
   StatusBar,
 } from 'react-native';
-
 import ModalScreen from '@/components/ModalScreen';
 import JoinModal from '@/components/JoinModal';
 import HostModal from '@/components/HostModal';
-import SettingModal from '../../components/SettingModal';
+import SettingModal from '@/components/SettingModal';
 import CustomButton from '@/components/CustomButton';
-
+import {
+  initiateSocketConnection,
+  getSocket,
+} from '../../scripts/socketService';
 import { useSelector } from 'react-redux';
 
 function Main() {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [modalContent, setModalContent] = useState<React.ReactNode>(null);
   const [modalLabel, setModalLabel] = useState('');
-  
+
+  const { name, code, gameType, soundVolume, musicVolume } = useSelector(
+    (state: any) => state.player
+  );
+
+  useEffect(() => {
+    const socket = initiateSocketConnection();
+    return () => {
+      socket.disconnect();
+    };
+  }, []);
+
   const openJoinModal = () => {
     setModalLabel('Join a Game');
-    setModalContent(<JoinModal setIsVisible={setIsModalVisible} />);
+    setModalContent(
+      <JoinModal
+        socket={getSocket()}
+        setIsVisible={setIsModalVisible}
+      />
+    );
     setIsModalVisible(true);
   };
+
   const openHostModal = () => {
     setModalLabel('Create Game');
-    setModalContent(<HostModal setIsVisible={setIsModalVisible}/>);
+    setModalContent(
+      <HostModal
+        socket={getSocket()}
+        setIsVisible={setIsModalVisible}
+      />
+    );
     setIsModalVisible(true);
   };
+
   const openSettingsModal = () => {
     setModalLabel('Settings');
     setModalContent(<SettingModal />);
     setIsModalVisible(true);
   };
-
- const { name, code, gameType, soundVolume, musicVolume } = useSelector(
-   (state: any) => state.player
- );
 
   return (
     <>

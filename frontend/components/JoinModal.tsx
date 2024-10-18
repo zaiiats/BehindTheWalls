@@ -1,100 +1,66 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { View, TextInput, Text } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { useForm, Controller } from 'react-hook-form';
-import { nameSet, codeSet, gameTypeSet } from '@/store/slices/playerSlice';
+import { nameSet, gameTypeSet, codeSet } from '@/store/slices/playerSlice';
 import CustomButton from './CustomButton';
-import { MAX_NAME_LENGTH, MIN_NAME_LENGTH, CODE_LENGTH } from '@/constants/constants';
-import { io } from 'socket.io-client';
-import AsyncStorage from '@react-native-async-storage/async-storage'; 
+import {
+  MAX_NAME_LENGTH,
+  MIN_NAME_LENGTH,
+  CODE_LENGTH,
+} from '@/constants/constants';
 import { useNavigation } from '@react-navigation/native';
-import { RootStackParamList } from '../app/_layout';
 import { StackNavigationProp } from '@react-navigation/stack';
-
-type HostModalNavigationProp = StackNavigationProp<RootStackParamList,'lobby/index'>;
+import { RootStackParamList } from '../app/_layout';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 interface JoinModalProps {
   setIsVisible: React.Dispatch<React.SetStateAction<boolean>>;
+  socket: any;
 }
+type JoinModalNavigationProp = StackNavigationProp<
+  RootStackParamList,
+  'lobby/index'
+>;
 
-interface JoinModalFormValues {
-  username: string;
-  gameCode: string;
-}
-
-let socket = io('http://localhost:4000');
-
-const JoinModal: React.FC<JoinModalProps> = ({ setIsVisible }) => {
-  const navigation = useNavigation<HostModalNavigationProp>();
-
+const JoinModal: React.FC<JoinModalProps> = ({
+  setIsVisible,
+  socket,
+}) => {
   const dispatch = useDispatch();
-
-  const [isConnected, setIsConnected] = useState(false);
-  const username = useSelector((store: any) => store.player.name); 
-  const gameCode = useSelector((store: any) => store.player.code); 
+  const navigation = useNavigation<JoinModalNavigationProp>();
+  const username = useSelector((store: any) => store.player.name);
+  const gameCode = useSelector((store: any) => store.player.code);
   const soundVolume = useSelector((state: any) => state.player.soundVolume);
   const musicVolume = useSelector((state: any) => state.player.musicVolume);
-  
+
   const {
     control,
     handleSubmit,
     formState: { errors },
-  } = useForm<JoinModalFormValues>();
+  } = useForm();
 
-  useEffect(() => {
-    const checkForReconnection = async () => {
-      const savedUserId = await AsyncStorage.getItem('userId');
-      if (savedUserId) {
-        socket.emit(
-          'reconnectUser',
-          { userId: savedUserId },
-          (response: any) => {
-            if (response.success) {
-              console.log('Reconnected with previous session');
-              setIsConnected(true);
-            } else {
-              console.log('Failed to reconnect, starting new session');
-            }
-          }
-        );
-      }
-    };
-
-    socket.on('connect', () => {
-      console.log('Connected to the server:', socket.id);
-      checkForReconnection();
-    });
-  }, []);
-
-  const onSubmit = (data: JoinModalFormValues) => {
-     if (!isConnected) {
+  const onSubmit = (data: any) => {
+    if (socket) {
+      dispatch(codeSet(data.gameCode));
       dispatch(nameSet(data.username));
-      dispatch(gameTypeSet('host'));
+      dispatch(gameTypeSet('join'));
 
-      socket.emit(
-        'joinGame',
-        { 
-          userData: {
-            username: data.username, 
-            gameCode, 
-            soundVolume, 
-            musicVolume
-          } 
+      console.log('Submitted game code:', data.gameCode); 
+
+      socket.emit('joinGame', {
+        userData: {
+          username: data.username,
+          gameCode: data.gameCode,
+          soundVolume,
+          musicVolume,
         },
-        async (response: any) => {
-          if (response.success) {
-            console.log('Connected to the game!');
-            setIsConnected(true);
-            await AsyncStorage.setItem('userId', response.userId);
-          } else {
-            console.log('Error or already in the game');
-          }
-        }
-      );
+      });
+
       navigation.push('lobby/index');
       setIsVisible(false);
     } else {
-      console.log('You are already connected to the game.');
+      console.error('Socket not initialized');
     }
   };
 
@@ -129,7 +95,11 @@ const JoinModal: React.FC<JoinModalProps> = ({ setIsVisible }) => {
         )}
       />
       {errors.username && (
-        <Text style={{ color: 'red' }}>{errors.username.message}</Text>
+        <Text style={{ color: 'red' }}>
+          {typeof errors.username.message === 'string'
+            ? errors.username.message
+            : 'Invalid input'}
+        </Text>
       )}
 
       <Text>Enter the game code to join the lobby:</Text>
@@ -161,7 +131,11 @@ const JoinModal: React.FC<JoinModalProps> = ({ setIsVisible }) => {
         )}
       />
       {errors.gameCode && (
-        <Text style={{ color: 'red' }}>{errors.gameCode.message}</Text>
+        <Text style={{ color: 'red' }}>
+          {typeof errors.gameCode.message === 'string'
+            ? errors.gameCode.message
+            : 'Invalid input'}
+        </Text>
       )}
 
       <CustomButton callback={handleSubmit(onSubmit)}>Join Game</CustomButton>

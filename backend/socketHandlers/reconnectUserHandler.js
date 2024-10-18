@@ -1,6 +1,4 @@
-const { v4: uuidv4 } = require('uuid');
-
-const handleReconnectUser = (io, socket, connectedUsers) => {
+const handleReconnectUser = (socket, connectedUsers) => {
   socket.on('reconnectUser', (data, callback) => {
     const { userId } = data;
 
@@ -16,6 +14,6 @@ const handleReconnectUser = (io, socket, connectedUsers) => {
       callback({ success: false });
     }
   });
-}
+};
 
 module.exports = { handleReconnectUser };
