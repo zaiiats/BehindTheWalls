@@ -103,7 +103,6 @@ let addUser = async function (code, name) {
   }
 };
 
-
 let removeUser = async function (code, name) {
   try {
     const { data, error } = await supabase
@@ -156,12 +155,33 @@ let getUser = async function (code, username) {
       console.error('Error fetching players:', error);
       return null;
     }
+
+    if (data && data.length > 0) {
+      const players = data[0].players;
+
+      if (Array.isArray(players)) {
+        const userExists = players.some((player) => player === username);
+
+        if (userExists) {
+          console.log('User with the same name exists');
+          return true; 
+        } else {
+          console.log('Username available');
+          return false; 
+        }
+      } else {
+        console.log('Players is not an array or is undefined.');
+        return false;
+      }
+    }
+
+    console.log('No game found with the provided code.');
+    return null; 
   } catch (err) {
     console.error('Error:', err);
     return null;
   }
-}
-
+};
 
 
 

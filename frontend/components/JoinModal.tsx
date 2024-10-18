@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, TextInput, Text } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { useForm, Controller } from 'react-hook-form';
@@ -22,9 +22,7 @@ type JoinModalNavigationProp = StackNavigationProp<
   'lobby/index'
 >;
 
-const JoinModal: React.FC<JoinModalProps> = ({
-  setIsVisible,
-}) => {
+const JoinModal: React.FC<JoinModalProps> = ({ setIsVisible }) => {
   const dispatch = useDispatch();
   const navigation = useNavigation<JoinModalNavigationProp>();
   const username = useSelector((store: any) => store.player.name);
@@ -32,6 +30,7 @@ const JoinModal: React.FC<JoinModalProps> = ({
   const soundVolume = useSelector((state: any) => state.player.soundVolume);
   const musicVolume = useSelector((state: any) => state.player.musicVolume);
   const socket = useSelector((state: any) => state.player.socket);
+  const [error, setError] = useState('');
 
   const {
     control,
@@ -41,11 +40,12 @@ const JoinModal: React.FC<JoinModalProps> = ({
 
   const onSubmit = (data: any) => {
     if (socket) {
+      setError('')
       dispatch(codeSet(data.gameCode));
       dispatch(nameSet(data.username));
       dispatch(gameTypeSet('join'));
 
-      console.log('Submitted game code:', data.gameCode); 
+      console.log('Submitted game code:', data.gameCode);
 
       socket.emit('joinGame', {
         userData: {
@@ -56,89 +56,118 @@ const JoinModal: React.FC<JoinModalProps> = ({
         },
       });
 
-      navigation.push('lobby/index');
-      setIsVisible(false);
+      socket.on('joinSuccess', (response: any) => {
+        console.log(response.message);
+        navigation.push('lobby/index'); // Only navigate on success
+        setIsVisible(false);
+      });
+
+      socket.on('invalidGameCode', (error: any) => {
+        console.error(error.message);
+        // Display error to the user (for example, using a Toast, Modal, or other UI element)
+        setError(error.message);
+      });
+
+      socket.on('invalidName', (error: any) => {
+        console.error(error.message);
+        // Display error to the user
+        setError(error.message);
+      });
     } else {
       console.error('Socket not initialized');
     }
   };
 
   return (
-    <View>
-      <Text>Your name:</Text>
-      <Controller
-        control={control}
-        name='username'
-        defaultValue={username}
-        rules={{
-          required: 'Name is required',
-          minLength: {
-            value: MIN_NAME_LENGTH,
-            message: `Name must be at least ${MIN_NAME_LENGTH} characters long`,
-          },
-          maxLength: {
-            value: MAX_NAME_LENGTH,
-            message: `Name must be less than ${MAX_NAME_LENGTH} characters long`,
-          },
-        }}
-        render={({ field: { onChange, value } }) => (
-          <TextInput
-            value={value}
-            onChangeText={onChange}
-            placeholder='Enter name'
-            style={{
-              borderColor: errors.username ? 'red' : 'black',
-              borderWidth: 1,
+    <>
+      {error?
+        <View>
+          <Text>
+            Error:
+          </Text>
+          <Text>
+            {error}
+          </Text>
+        </View>:
+        <View>
+          <Text>Your name:</Text>
+          <Controller
+            control={control}
+            name='username'
+            defaultValue={username}
+            rules={{
+              required: 'Name is required',
+              minLength: {
+                value: MIN_NAME_LENGTH,
+                message: `Name must be at least ${MIN_NAME_LENGTH} characters long`,
+              },
+              maxLength: {
+                value: MAX_NAME_LENGTH,
+                message: `Name must be less than ${MAX_NAME_LENGTH} characters long`,
+              },
             }}
+            render={({ field: { onChange, value } }) => (
+              <TextInput
+                value={value}
+                onChangeText={onChange}
+                placeholder='Enter name'
+                style={{
+                  borderColor: errors.username ? 'red' : 'black',
+                  borderWidth: 1,
+                }}
+              />
+            )}
           />
-        )}
-      />
-      {errors.username && (
-        <Text style={{ color: 'red' }}>
-          {typeof errors.username.message === 'string'
-            ? errors.username.message
-            : 'Invalid input'}
-        </Text>
-      )}
+          {errors.username && (
+            <Text style={{ color: 'red' }}>
+              {typeof errors.username.message === 'string'
+                ? errors.username.message
+                : 'Invalid input'}
+            </Text>
+          )}
 
-      <Text>Enter the game code to join the lobby:</Text>
-      <Controller
-        control={control}
-        name='gameCode'
-        defaultValue={gameCode}
-        rules={{
-          required: 'Game code is required',
-          minLength: {
-            value: CODE_LENGTH,
-            message: `Game code must be ${CODE_LENGTH} characters long`,
-          },
-          maxLength: {
-            value: CODE_LENGTH,
-            message: `Game code must be ${CODE_LENGTH} characters long`,
-          },
-        }}
-        render={({ field: { onChange, value } }) => (
-          <TextInput
-            value={value}
-            onChangeText={onChange}
-            placeholder='Enter game code'
-            style={{
-              borderColor: errors.gameCode ? 'red' : 'black',
-              borderWidth: 1,
+          <Text>Enter the game code to join the lobby:</Text>
+          <Controller
+            control={control}
+            name='gameCode'
+            defaultValue={gameCode}
+            rules={{
+              required: 'Game code is required',
+              minLength: {
+                value: CODE_LENGTH,
+                message: `Game code must be ${CODE_LENGTH} characters long`,
+              },
+              maxLength: {
+                value: CODE_LENGTH,
+                message: `Game code must be ${CODE_LENGTH} characters long`,
+              },
             }}
+            render={({ field: { onChange, value } }) => (
+              <TextInput
+                value={value}
+                onChangeText={onChange}
+                placeholder='Enter game code'
+                style={{
+                  borderColor: errors.gameCode ? 'red' : 'black',
+                  borderWidth: 1,
+                }}
+              />
+            )}
           />
-        )}
-      />
-      {errors.gameCode && (
-        <Text style={{ color: 'red' }}>
-          {typeof errors.gameCode.message === 'string'
-            ? errors.gameCode.message
-            : 'Invalid input'}
-        </Text>
-      )}
+          {errors.gameCode && (
+            <Text style={{ color: 'red' }}>
+              {typeof errors.gameCode.message === 'string'
+                ? errors.gameCode.message
+                : 'Invalid input'}
+            </Text>
+          )}
 
-      <CustomButton callback={handleSubmit(onSubmit)}>Join Game</CustomButton>
-    </View>
+          <CustomButton callback={handleSubmit(onSubmit)}>
+            Join Game
+          </CustomButton>
+        </View>
+      }
+    </>
   );
 };
 

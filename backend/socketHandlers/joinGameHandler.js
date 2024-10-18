@@ -26,7 +26,10 @@ const handleJoinGame = (io, socket) => {
       return;
     }
 
-    if (getUser(code,userData.username)) {
+    let usersData = await getUser(code,userData.username)
+    
+    
+    if (usersData) {
       console.log('There is already a person with the same name');
       socket.emit('invalidName', {
         message: 'Invalid name, please try again.',
@@ -43,9 +46,7 @@ const handleJoinGame = (io, socket) => {
         console.log('Failed to add player.');
       }
     });
-    
-    
-    
+        
   });
 };
 

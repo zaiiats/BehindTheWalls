@@ -7,4 +7,5 @@ const generateGameCode = (length = 6) => {
   return code;
 };
 
+
 module.exports = { generateGameCode };
