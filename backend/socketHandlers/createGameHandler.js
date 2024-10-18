@@ -1,9 +1,12 @@
 const { v4: uuidv4 } = require('uuid');
 const { generateGameCode } = require('../utils/utils.js');
+const { createEnvironment } = require('../utils/createEnvData.js');
 
 const {
   insertGame,
   getGame,
+  addUser,
+  addEnvData 
 } = require('../supabase.js');
 
 const handleCreateGame = (io, socket) => {
@@ -28,18 +31,16 @@ const handleCreateGame = (io, socket) => {
       hostName: userData.username,
     };
 
-
     await insertGame(game);
-
-    socket.emit('joinSuccess', {
-      message: 'You successfully joined the game!',
-      gameData,
-    });
 
     console.log(
       `Game created with code: ${game.code} and host: ${game.hostName}`
     );
 
+    await addUser(game.code, game.hostName)
+
+    const envData = JSON.stringify(createEnvironment());
+    await addEnvData(game.code, envData)
     //connectedUsers.push(user);
     //io.emit('updateUsers', connectedUsers);
   });

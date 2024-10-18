@@ -69,10 +69,109 @@ let deleteGame = async function (code) {
   }
 };
 
+let addUser = async function (code, name) {
+  try {
+    const { data: gameData, error: fetchError } = await supabase
+      .from('games')
+      .select('players')
+      .eq('code', code)
+      .single();
+
+    if (fetchError || !gameData) {
+      console.error('Error fetching game data:', fetchError);
+      return null;
+    }
+
+    const currentPlayers = gameData.players || [];
+    const updatedPlayers = [...currentPlayers, name];
+
+    const { error: updateError } = await supabase
+      .from('games')
+      .update({ players: updatedPlayers })
+      .eq('code', code);
+
+    if (updateError) {
+      console.error('Error updating players:', updateError);
+      return null;
+    } else {
+      console.log('User added successfully');
+      return true;
+    }
+  } catch (err) {
+    console.error('Error:', err);
+    return null;
+  }
+};
+
+
+let removeUser = async function (code, name) {
+  try {
+    const { data, error } = await supabase
+      .from('games') 
+      .delete()
+      .eq('code', code)
+      .eq('players', name);
+
+    if (error) {
+      console.error('Error removing user:', error);
+      return null;
+    } else {
+      console.log('User removed successfully:', data);
+      return data;
+    }
+  } catch (err) {
+    console.error('Error:', err);
+    return null;
+  }
+};
+
+let addEnvData = async function (code, envData) {
+  try {
+    const { data, error } = await supabase
+      .from('games') 
+      .update({ envData: envData })
+      .eq('code', code); 
+
+    if (error) {
+      console.error('Error setting env data:', error);
+      return null;
+    } else {
+      console.log('Env data set successfully:', data);
+      return data;
+    }
+  } catch (err) {
+    console.error('Error:', err);
+    return null;
+  }
+};
+
+let getUser = async function (code, username) {
+  try {
+    const { data, error } = await supabase
+      .from('games')
+      .select('players')
+      .eq('code', code);
+
+    if (error) {
+      console.error('Error fetching players:', error);
+      return null;
+    }
+  } catch (err) {
+    console.error('Error:', err);
+    return null;
+  }
+}
+
+
+
 
 module.exports = {
   getData,
   insertGame,
   getGame,
   deleteGame,
+  addUser,
+  removeUser,
+  addEnvData,
+  getUser
 };

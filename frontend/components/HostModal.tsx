@@ -15,7 +15,6 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 interface HostModalProps {
   setIsVisible: React.Dispatch<React.SetStateAction<boolean>>;
-  socket: any;
 }
 
 type HostModalNavigationProp = StackNavigationProp<
@@ -24,20 +23,22 @@ type HostModalNavigationProp = StackNavigationProp<
 >;
 
 const HostModal: React.FC<HostModalProps> = ({
-  setIsVisible,
-  socket
+  setIsVisible
 }) => {
   const dispatch = useDispatch();
   const navigation = useNavigation<HostModalNavigationProp>();
   const username = useSelector((state: any) => state.player.name);
   const soundVolume = useSelector((state: any) => state.player.soundVolume);
   const musicVolume = useSelector((state: any) => state.player.musicVolume);
+  const socket = useSelector((state:any)=>state.player.socket)
 
   const {
     control,
     handleSubmit,
     formState: { errors },
   } = useForm();
+  console.log('Loser');
+  
 
   const onSubmit = (data: any) => {
     if (socket) {

@@ -2,10 +2,12 @@ import { createSlice } from '@reduxjs/toolkit';
 
 const initialPlayerState = {
   name: '',
-  code:'',
+  code: '',
   gameType: '',
   soundVolume: 0.5,
   musicVolume: 0.5,
+  socket: null,
+  gameData: null,
 };
 
 const playerSlice = createSlice({
@@ -27,8 +29,22 @@ const playerSlice = createSlice({
     codeSet: (state, action) => {
       state.code = action.payload;
     },
+    socketSet: (state, action) => {
+      state.socket = action.payload;
+    },
+    gameData: (state, action) => {
+      state.gameData = action.payload;
+    },
   },
 });
 
 export default playerSlice.reducer;
-export const { nameSet, soundVolumeSet, musicVolumeSet, gameTypeSet, codeSet } = playerSlice.actions;
+export const {
+  nameSet,
+  soundVolumeSet,
+  musicVolumeSet,
+  gameTypeSet,
+  codeSet,
+  socketSet,
+  gameData,
+} = playerSlice.actions;

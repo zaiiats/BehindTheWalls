@@ -16,7 +16,6 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 interface JoinModalProps {
   setIsVisible: React.Dispatch<React.SetStateAction<boolean>>;
-  socket: any;
 }
 type JoinModalNavigationProp = StackNavigationProp<
   RootStackParamList,
@@ -25,7 +24,6 @@ type JoinModalNavigationProp = StackNavigationProp<
 
 const JoinModal: React.FC<JoinModalProps> = ({
   setIsVisible,
-  socket,
 }) => {
   const dispatch = useDispatch();
   const navigation = useNavigation<JoinModalNavigationProp>();
@@ -33,6 +31,7 @@ const JoinModal: React.FC<JoinModalProps> = ({
   const gameCode = useSelector((store: any) => store.player.code);
   const soundVolume = useSelector((state: any) => state.player.soundVolume);
   const musicVolume = useSelector((state: any) => state.player.musicVolume);
+  const socket = useSelector((state: any) => state.player.socket);
 
   const {
     control,

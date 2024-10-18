@@ -33,6 +33,9 @@ function index() {
           )}
         />
       </Text>
+      <View>
+
+      </View>
     </View>
   );
 }

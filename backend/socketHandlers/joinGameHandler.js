@@ -1,6 +1,5 @@
 const { v4: uuidv4 } = require('uuid');
-
-const { getGame } = require('../supabase.js');
+const { getGame, addUser, getUser} = require('../supabase.js');
 
 const handleJoinGame = (io, socket) => {
   socket.on('joinGame', async (data) => {
@@ -27,16 +26,26 @@ const handleJoinGame = (io, socket) => {
       return;
     }
 
-
+    if (getUser(code,userData.username)) {
+      console.log('There is already a person with the same name');
+      socket.emit('invalidName', {
+        message: 'Invalid name, please try again.',
+      });
+      return;
+    }
     
     socket.emit('joinSuccess', { message: 'You successfully joined the game!', gameData });
 
-    // Perform additional actions if needed, e.g., add user to game room
-
-    console.log('User joined the game:', userData.username);
+    addUser(code, userData.username).then((response) => {
+      if (response) {
+        console.log('Player added to game:', response);
+      } else {
+        console.log('Failed to add player.');
+      }
+    });
     
-    //connectedUsers.push(user);
-    //io.emit('updateUsers', connectedUsers);
+    
+    
   });
 };
 

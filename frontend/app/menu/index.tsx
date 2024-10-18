@@ -12,11 +12,9 @@ import JoinModal from '@/components/JoinModal';
 import HostModal from '@/components/HostModal';
 import SettingModal from '@/components/SettingModal';
 import CustomButton from '@/components/CustomButton';
-import {
-  initiateSocketConnection,
-  getSocket,
-} from '../../scripts/socketService';
-import { useSelector } from 'react-redux';
+import { socketSet } from '@/store/slices/playerSlice';
+import { useDispatch, useSelector } from 'react-redux';
+import { io } from 'socket.io-client';
 
 function Main() {
   const [isModalVisible, setIsModalVisible] = useState(false);
@@ -26,19 +24,31 @@ function Main() {
   const { name, code, gameType, soundVolume, musicVolume } = useSelector(
     (state: any) => state.player
   );
+   const dispatch = useDispatch();
+   const socket = useSelector((state: any) => state.player.socket);
 
-  useEffect(() => {
-    const socket = initiateSocketConnection();
-    return () => {
-      socket.disconnect();
-    };
-  }, []);
+   useEffect(() => {
+     if (!socket) {
+        const newSocket = io('http://localhost:4000');
+        console.log('Socket initialized:', newSocket.id);
+        dispatch(socketSet(newSocket)); 
+     } else {
+       console.log('Socket already initialized:', socket.id);
+     }
+
+     return () => {
+       if (socket) {
+         socket.disconnect();
+         dispatch(socketSet(null)); 
+       }
+     };
+   }, [socket, dispatch]);
+
 
   const openJoinModal = () => {
     setModalLabel('Join a Game');
     setModalContent(
       <JoinModal
-        socket={getSocket()}
         setIsVisible={setIsModalVisible}
       />
     );
@@ -49,7 +59,6 @@ function Main() {
     setModalLabel('Create Game');
     setModalContent(
       <HostModal
-        socket={getSocket()}
         setIsVisible={setIsModalVisible}
       />
     );

@@ -5,6 +5,7 @@ const { handleCreateGame } = require('./socketHandlers/createGameHandler.js');
 const { handleJoinGame } = require('./socketHandlers/joinGameHandler.js');
 const { handleReconnectUser } = require('./socketHandlers/reconnectUserHandler.js');
 
+
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
@@ -16,8 +17,9 @@ const io = new Server(server, {
 
 let connectedUsers = [];
 
-io.on('connection', (socket) => {
-  console.log('A user connected:', socket.id);
+io.on('connection', (socket) => {  
+  console.log('A user connected: 7', socket.id);
+
 
   handleCreateGame(io, socket);
   handleJoinGame(io, socket)
