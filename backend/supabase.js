@@ -53,6 +53,27 @@ let getGame = async function (code) {
   }
 };
 
+let getSocket = async function (code) {
+  try {
+    let { data: games, error } = await supabase
+      .from('games')
+      .select('hostIp')
+      .eq('code', code);
+
+    if (error) {
+      console.error('Error getting ip:', error);
+      return null;
+    } else if (games.length === 0) {
+      console.log('No game found with the given code', code);
+      return null;
+    } else {
+      return games[0]; 
+    }
+  } catch (err) {
+    console.error('Error:', err);
+  }
+};
+
 let deleteGame = async function (code) {
   try {
     const { data, error } = await supabase
@@ -183,6 +204,27 @@ let getUser = async function (code, username) {
   }
 };
 
+let getUsers = async function (code) {
+  try {
+    const { data, error } = await supabase
+      .from('games')
+      .select('players')
+      .eq('code', code)
+      .single(); 
+
+    if (error || !data) {
+      console.log('Error occurred while getting users:', error);
+      return null;
+    }
+
+    return data.players || [];
+  } catch (err) {
+    console.error('Error:', err);
+    return null;
+  }
+};
+
+
 
 
 module.exports = {
@@ -193,5 +235,7 @@ module.exports = {
   addUser,
   removeUser,
   addEnvData,
-  getUser
+  getUser,
+  getUsers,
+  getSocket
 };

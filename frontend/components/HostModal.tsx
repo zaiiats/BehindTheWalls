@@ -11,7 +11,6 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../app/_layout';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 
 interface HostModalProps {
   setIsVisible: React.Dispatch<React.SetStateAction<boolean>>;
@@ -84,7 +83,10 @@ const HostModal: React.FC<HostModalProps> = ({
           <TextInput
             placeholder='Enter name'
             value={value}
-            onChangeText={onChange}
+            onChangeText={(text) => {
+              onChange(text);
+              dispatch(nameSet(text)); 
+            }}
             style={{
               borderColor: errors.username ? 'red' : 'black',
               borderWidth: 1,

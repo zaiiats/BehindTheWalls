@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, TextInput, Text } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { useForm, Controller } from 'react-hook-form';
-import { nameSet, gameTypeSet, codeSet } from '@/store/slices/playerSlice';
+import { nameSet, gameTypeSet, codeSet, socketSet } from '@/store/slices/playerSlice';
 import CustomButton from './CustomButton';
 import {
   MAX_NAME_LENGTH,
@@ -12,7 +12,6 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../app/_layout';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 
 interface JoinModalProps {
   setIsVisible: React.Dispatch<React.SetStateAction<boolean>>;
@@ -40,12 +39,10 @@ const JoinModal: React.FC<JoinModalProps> = ({ setIsVisible }) => {
 
   const onSubmit = (data: any) => {
     if (socket) {
-      setError('')
+      setError('');
       dispatch(codeSet(data.gameCode));
       dispatch(nameSet(data.username));
       dispatch(gameTypeSet('join'));
-
-      console.log('Submitted game code:', data.gameCode);
 
       socket.emit('joinGame', {
         userData: {
@@ -53,24 +50,24 @@ const JoinModal: React.FC<JoinModalProps> = ({ setIsVisible }) => {
           gameCode: data.gameCode,
           soundVolume,
           musicVolume,
-        },
+        }
       });
 
       socket.on('joinSuccess', (response: any) => {
         console.log(response.message);
-        navigation.push('lobby/index'); // Only navigate on success
+        navigation.push('lobby/index');
         setIsVisible(false);
       });
 
       socket.on('invalidGameCode', (error: any) => {
         console.error(error.message);
-        // Display error to the user (for example, using a Toast, Modal, or other UI element)
+        dispatch(codeSet(''));
         setError(error.message);
       });
 
       socket.on('invalidName', (error: any) => {
         console.error(error.message);
-        // Display error to the user
+        dispatch(codeSet(''));
         setError(error.message);
       });
     } else {
@@ -80,15 +77,12 @@ const JoinModal: React.FC<JoinModalProps> = ({ setIsVisible }) => {
 
   return (
     <>
-      {error?
+      {error ? (
         <View>
-          <Text>
-            Error:
-          </Text>
-          <Text>
-            {error}
-          </Text>
-        </View>:
+          <Text>Error:</Text>
+          <Text>{error}</Text>
+        </View>
+      ) : (
         <View>
           <Text>Your name:</Text>
           <Controller
@@ -109,7 +103,10 @@ const JoinModal: React.FC<JoinModalProps> = ({ setIsVisible }) => {
             render={({ field: { onChange, value } }) => (
               <TextInput
                 value={value}
-                onChangeText={onChange}
+                onChangeText={(text) => {
+                  onChange(text);
+                  dispatch(nameSet(text));
+                }}
                 placeholder='Enter name'
                 style={{
                   borderColor: errors.username ? 'red' : 'black',
@@ -145,7 +142,10 @@ const JoinModal: React.FC<JoinModalProps> = ({ setIsVisible }) => {
             render={({ field: { onChange, value } }) => (
               <TextInput
                 value={value}
-                onChangeText={onChange}
+                onChangeText={(value) => {
+                  onChange(value);
+                  dispatch(codeSet(value));
+                }}
                 placeholder='Enter game code'
                 style={{
                   borderColor: errors.gameCode ? 'red' : 'black',
@@ -166,7 +166,7 @@ const JoinModal: React.FC<JoinModalProps> = ({ setIsVisible }) => {
             Join Game
           </CustomButton>
         </View>
-      }
+      )}
     </>
   );
 };

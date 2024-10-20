@@ -1,49 +1,72 @@
+import { useNavigation } from '@react-navigation/native';
+import { StackNavigationProp } from '@react-navigation/stack';
 import { useEffect, useState } from 'react';
-import { View, Text, StyleSheet } from 'react-native'
+import { View, Text, StyleSheet } from 'react-native';
 import { FlatList } from 'react-native-gesture-handler';
-import io from 'socket.io-client';
+import { useSelector } from 'react-redux';
+import { RootStackParamList } from '../_layout';
+import CustomButton from '@/components/CustomButton';
 
-const socket = io('http://localhost:4000');
+type LobbyScreenProp = StackNavigationProp<RootStackParamList, 'lobby/index'>;
 
-function index() {
-   const [connectedUsers, setConnectedUsers] = useState([]);
+function Lobby() {
+  const [connectedUsers, setConnectedUsers] = useState<string[]>([]);
+  const [isReady, setIsReady] = useState(false);
+  const navigation = useNavigation<LobbyScreenProp>();
 
-   useEffect(() => {
-     socket.on('updateUsers', (users) => {
-       setConnectedUsers(users);
-     });
+  const socket = useSelector((state: any) => state.player.socket);
+  const username = useSelector((state: any) => state.player.name);
+  const code = useSelector((state: any) => state.player.code);
 
-     return () => {
-       socket.off('updateUsers'); 
-       socket.disconnect(); 
-     };
-   }, []);
+  useEffect(() => {
+    if (!username || !socket) {
+      navigation.replace('menu/index'); 
+      return;
+    }
+
+    const handleUpdatePlayers = (data: { message: string; players: string[] }) => {
+      setConnectedUsers(data.players); 
+      console.log(data.message); 
+    };
+
+    socket.on('updatePlayers', handleUpdatePlayers);
+    socket.on('connect', () => {
+      console.log('Socket connected:', socket.id);
+    });
+
+    return () => {
+      socket.off('updatePlayers', handleUpdatePlayers);
+    };
+    
+  }, [socket, username]);
+
+  useEffect(() => {
+    socket.emit('playerReady', { username });
+  }, [isReady]);
+
 
   return (
-    <View style={style.screen}>
-      <Text>
-        Lobby
-      </Text>
-      <Text>
-        <FlatList
-          data={connectedUsers}
-          keyExtractor={(item:any) => item.userId}
-          renderItem={({ item }) => (
-            <Text>{item.userData.username}</Text> 
-          )}
-        />
-      </Text>
-      <View>
-
-      </View>
+    <View style={styles.screen}>
+      <Text>Lobby</Text>
+      <FlatList
+        data={connectedUsers}
+        keyExtractor={(item: any) => item.userId}
+        renderItem={({ item }) => (
+          <Text>{item?.userData?.username || 'Unknown User'}</Text>
+        )}
+      />
+      <CustomButton callback={() => setIsReady(true)}>
+        {isReady?'I am ready':'Ready?'}
+      </CustomButton>
     </View>
   );
 }
 
-const style = StyleSheet.create({
-  screen:{
-    flex:1
-  }
-})
+const styles = StyleSheet.create({
+  screen: {
+    flex: 1,
+    padding: 20,
+  },
+});
 
-export default index
+export default Lobby;

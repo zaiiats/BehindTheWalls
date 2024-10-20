@@ -1,5 +1,5 @@
 const { v4: uuidv4 } = require('uuid');
-const { getGame, addUser, getUser} = require('../supabase.js');
+const { getGame, addUser, getUser, getUsers, getSocket} = require('../supabase.js');
 
 const handleJoinGame = (io, socket) => {
   socket.on('joinGame', async (data) => {
@@ -14,10 +14,8 @@ const handleJoinGame = (io, socket) => {
     };
 
     const code = userData.gameCode
-    console.log('code is ',code, data);
     
     const gameData = await getGame(code) 
-
     if (!gameData) {
       console.log('Invalid game code provided');
       socket.emit('invalidGameCode', {
@@ -26,25 +24,30 @@ const handleJoinGame = (io, socket) => {
       return;
     }
 
-    let usersData = await getUser(code,userData.username)
-    
-    
-    if (usersData) {
+    let existingUser = await getUser(code, userData.username);
+    if (existingUser) {
       console.log('There is already a person with the same name');
       socket.emit('invalidName', {
         message: 'Invalid name, please try again.',
       });
       return;
     }
-    
-    socket.emit('joinSuccess', { message: 'You successfully joined the game!', gameData });
 
-    addUser(code, userData.username).then((response) => {
-      if (response) {
-        console.log('Player added to game:', response);
-      } else {
-        console.log('Failed to add player.');
-      }
+    console.log(gameData.hostIp);
+    socket.join(gameData.hostIp);
+
+    await addUser(code, userData.username);
+    const users = await getUsers(code)
+    
+
+    io.to(gameData.hostIp).emit('updatePlayers', {
+      message: 'New player joined the game!',
+      players: users,
+    });
+
+    socket.emit('joinSuccess', {
+      message: 'Successfully joined the game!',
+      ip: gameData.hostIp,
     });
         
   });

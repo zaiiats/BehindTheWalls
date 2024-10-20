@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -12,9 +12,7 @@ import JoinModal from '@/components/JoinModal';
 import HostModal from '@/components/HostModal';
 import SettingModal from '@/components/SettingModal';
 import CustomButton from '@/components/CustomButton';
-import { socketSet } from '@/store/slices/playerSlice';
-import { useDispatch, useSelector } from 'react-redux';
-import { io } from 'socket.io-client';
+import { useSelector } from 'react-redux';
 
 function Main() {
   const [isModalVisible, setIsModalVisible] = useState(false);
@@ -24,44 +22,18 @@ function Main() {
   const { name, code, gameType, soundVolume, musicVolume } = useSelector(
     (state: any) => state.player
   );
-   const dispatch = useDispatch();
-   const socket = useSelector((state: any) => state.player.socket);
 
-   useEffect(() => {
-     if (!socket) {
-        const newSocket = io('http://localhost:4000');
-        console.log('Socket initialized:', newSocket.id);
-        dispatch(socketSet(newSocket)); 
-     } else {
-       console.log('Socket already initialized:', socket.id);
-     }
-
-     return () => {
-       if (socket) {
-         socket.disconnect();
-         dispatch(socketSet(null)); 
-       }
-     };
-   }, [socket, dispatch]);
-
+  const socket = useSelector((state: any) => state.player.socket);
 
   const openJoinModal = () => {
     setModalLabel('Join a Game');
-    setModalContent(
-      <JoinModal
-        setIsVisible={setIsModalVisible}
-      />
-    );
+    setModalContent(<JoinModal setIsVisible={setIsModalVisible} />);
     setIsModalVisible(true);
   };
 
   const openHostModal = () => {
     setModalLabel('Create Game');
-    setModalContent(
-      <HostModal
-        setIsVisible={setIsModalVisible}
-      />
-    );
+    setModalContent(<HostModal setIsVisible={setIsModalVisible} />);
     setIsModalVisible(true);
   };
 
@@ -93,9 +65,7 @@ function Main() {
 
         <View style={styles.main}>
           <Text>Main</Text>
-          <Text>
-            {`${name} ${code} ${gameType} ${soundVolume} ${musicVolume}`}
-          </Text>
+          <Text>{`${name} ${code} ${gameType} ${soundVolume} ${musicVolume}`}</Text>
         </View>
 
         <View style={styles.buttons}>
